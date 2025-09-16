@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrice d'Analyse des Risques</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .matrix-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .matrix-wrapper {
+            flex: 1;
+        }
+        
+        .matrix-title {
+            font-size: 1.3em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .matrix {
+            display: grid;
+            grid-template-columns: 120px repeat(5, 1fr);
+            grid-template-rows: repeat(6, 80px);
+            gap: 2px;
+            background: #e2e8f0;
+            padding: 2px;
+            border-radius: 10px;
+        }
+        
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            font-weight: 600;
+            font-size: 0.9em;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .axis-label {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        .axis-label-horizontal {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        /* Couleurs des niveaux de risque */
+        .risk-1 { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+        .risk-2 { background: linear-gradient(135deg, #68d391 0%, #48bb78 100%); }
+        .risk-3 { background: linear-gradient(135deg, #9ae6b4 0%, #68d391 100%); }
+        .risk-4 { background: linear-gradient(135deg, #fbd38d 0%, #f6ad55 100%); }
+        .risk-5 { background: linear-gradient(135deg, #fc8181 0%, #f56565 100%); }
+        
+        .score {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .risk-level {
+            font-size: 0.75em;
+            position: absolute;
+            bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-panel {
+            flex: 0 0 400px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .risk-calculator {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .calculator-title {
+            font-size: 1.2em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .slider-group {
+            margin-bottom: 20px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #48bb78, #fbd38d, #fc8181);
+            outline: none;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .result-score {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .result-level {
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .legend {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .legend-title {
+            font-size: 1.2em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .legend-item:hover {
+            background: #f7fafc;
+            transform: translateX(5px);
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            margin-right: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .legend-text {
+            flex: 1;
+            color: #4a5568;
+        }
+        
+        .legend-range {
+            color: #718096;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .strategies {
+            margin-top: 30px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .strategies-title {
+            font-size: 1.2em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .strategy-item {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .strategy-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .strategy-desc {
+            color: #718096;
+            font-size: 0.9em;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .highlight {
+            animation: pulse 2s infinite;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Matrice d'Analyse des Risques Projet</h1>
+        <p class="subtitle">Outil d'évaluation et de priorisation des risques selon ISO 31000</p>
+        
+        <div class="matrix-container">
+            <div class="matrix-wrapper">
+                <h2 class="matrix-title">📊 Matrice Probabilité × Impact (5×5)</h2>
+                <div class="matrix">
+                    <!-- En-tête vide -->
+                    <div class="header"></div>
+                    <!-- En-têtes d'impact -->
+                    <div class="header">Insignifiant<br>(1)</div>
+                    <div class="header">Mineur<br>(2)</div>
+                    <div class="header">Modéré<br>(3)</div>
+                    <div class="header">Majeur<br>(4)</div>
+                    <div class="header">Sévère<br>(5)</div>
+                    
+                    <!-- Ligne 5 - Presque certain -->
+                    <div class="axis-label-horizontal">Presque certain<br>(5) >90%</div>
+                    <div class="cell risk-2" data-prob="5" data-impact="1">
+                        <span class="score">5</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-3" data-prob="5" data-impact="2">
+                        <span class="score">10</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    <div class="cell risk-4" data-prob="5" data-impact="3">
+                        <span class="score">15</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    <div class="cell risk-5" data-prob="5" data-impact="4">
+                        <span class="score">20</span>
+                        <span class="risk-level">Critique</span>
+                    </div>
+                    <div class="cell risk-5" data-prob="5" data-impact="5">
+                        <span class="score">25</span>
+                        <span class="risk-level">Critique</span>
+                    </div>
+                    
+                    <!-- Ligne 4 - Probable -->
+                    <div class="axis-label-horizontal">Probable<br>(4) 70-90%</div>
+                    <div class="cell risk-1" data-prob="4" data-impact="1">
+                        <span class="score">4</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-2" data-prob="4" data-impact="2">
+                        <span class="score">8</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-3" data-prob="4" data-impact="3">
+                        <span class="score">12</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    <div class="cell risk-4" data-prob="4" data-impact="4">
+                        <span class="score">16</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    <div class="cell risk-5" data-prob="4" data-impact="5">
+                        <span class="score">20</span>
+                        <span class="risk-level">Critique</span>
+                    </div>
+                    
+                    <!-- Ligne 3 - Possible -->
+                    <div class="axis-label-horizontal">Possible<br>(3) 30-70%</div>
+                    <div class="cell risk-1" data-prob="3" data-impact="1">
+                        <span class="score">3</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-2" data-prob="3" data-impact="2">
+                        <span class="score">6</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-3" data-prob="3" data-impact="3">
+                        <span class="score">9</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-4" data-prob="3" data-impact="4">
+                        <span class="score">12</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    <div class="cell risk-4" data-prob="3" data-impact="5">
+                        <span class="score">15</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    
+                    <!-- Ligne 2 - Peu probable -->
+                    <div class="axis-label-horizontal">Peu probable<br>(2) 10-30%</div>
+                    <div class="cell risk-1" data-prob="2" data-impact="1">
+                        <span class="score">2</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-1" data-prob="2" data-impact="2">
+                        <span class="score">4</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-2" data-prob="2" data-impact="3">
+                        <span class="score">6</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-3" data-prob="2" data-impact="4">
+                        <span class="score">8</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                    <div class="cell risk-3" data-prob="2" data-impact="5">
+                        <span class="score">10</span>
+                        <span class="risk-level">Élevé</span>
+                    </div>
+                    
+                    <!-- Ligne 1 - Rare -->
+                    <div class="axis-label-horizontal">Rare<br>(1) <10%</div>
+                    <div class="cell risk-1" data-prob="1" data-impact="1">
+                        <span class="score">1</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-1" data-prob="1" data-impact="2">
+                        <span class="score">2</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-1" data-prob="1" data-impact="3">
+                        <span class="score">3</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-2" data-prob="1" data-impact="4">
+                        <span class="score">4</span>
+                        <span class="risk-level">Faible</span>
+                    </div>
+                    <div class="cell risk-2" data-prob="1" data-impact="5">
+                        <span class="score">5</span>
+                        <span class="risk-level">Moyen</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="risk-calculator">
+                    <h3 class="calculator-title">🎯 Calculateur de Risque</h3>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Probabilité</span>
+                            <span id="prob-value">3</span>
+                        </div>
+                        <input type="range" id="prob-slider" min="1" max="5" value="3">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Impact</span>
+                            <span id="impact-value">3</span>
+                        </div>
+                        <input type="range" id="impact-slider" min="1" max="5" value="3">
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-score" id="result-score">9</div>
+                        <div class="result-level" id="result-level">Risque Moyen</div>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <h3 class="legend-title">📋 Légende des Niveaux</h3>
+                    <div class="legend-item">
+                        <div class="legend-color risk-1"></div>
+                        <span class="legend-text">Risque Faible</span>
+                        <span class="legend-range">1-4</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color risk-2"></div>
+                        <span class="legend-text">Risque Moyen</span>
+                        <span class="legend-range">5-9</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color risk-3"></div>
+                        <span class="legend-text">Risque Élevé</span>
+                        <span class="legend-range">10-16</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color risk-5"></div>
+                        <span class="legend-text">Risque Critique</span>
+                        <span class="legend-range">17-25</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="strategies">
+            <h3 class="strategies-title">🚀 Stratégies de Réponse aux Risques</h3>
+            <div class="strategy-item">
+                <div class="strategy-name">✅ Accepter (1-4)</div>
+                <div class="strategy-desc">Reconnaître le risque mais ne prendre aucune action proactive. Approprié pour les risques faibles avec un impact minimal sur les objectifs du projet.</div>
+            </div>
+            <div class="strategy-item">
+                <div class="strategy-name">🛡️ Atténuer (5-9)</div>
+                <div class="strategy-desc">Réduire la probabilité ou l'impact du risque. Mettre en place des contrôles préventifs et des plans d'action pour minimiser l'exposition.</div>
+            </div>
+            <div class="strategy-item">
+                <div class="strategy-name">🔄 Transférer (10-16)</div>
+                <div class="strategy-desc">Déplacer l'impact du risque vers un tiers (assurance, sous-traitance). Particulièrement efficace pour les risques financiers élevés.</div>
+            </div>
+            <div class="strategy-item">
+                <div class="strategy-name">🚫 Éviter (17-25)</div>
+                <div class="strategy-desc">Éliminer la menace en changeant le plan du projet. Modifier la portée, les ressources ou l'approche pour contourner complètement le risque critique.</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        // Calculateur de risque interactif
+        const probSlider = document.getElementById('prob-slider');
+        const impactSlider = document.getElementById('impact-slider');
+        const probValue = document.getElementById('prob-value');
+        const impactValue = document.getElementById('impact-value');
+        const resultScore = document.getElementById('result-score');
+        const resultLevel = document.getElementById('result-level');
+        
+        function updateCalculator() {
+            const prob = parseInt(probSlider.value);
+            const impact = parseInt(impactSlider.value);
+            const score = prob * impact;
+            
+            probValue.textContent = prob;
+            impactValue.textContent = impact;
+            resultScore.textContent = score;
+            
+            // Déterminer le niveau de risque
+            let level = '';
+            if (score <= 4) {
+                level = 'Risque Faible';
+                resultScore.parentElement.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+            } else if (score <= 9) {
+                level = 'Risque Moyen';
+                resultScore.parentElement.style.background = 'linear-gradient(135deg, #fbd38d 0%, #f6ad55 100%)';
+            } else if (score <= 16) {
+                level = 'Risque Élevé';
+                resultScore.parentElement.style.background = 'linear-gradient(135deg, #fc8181 0%, #f56565 100%)';
+            } else {
+                level = 'Risque Critique';
+                resultScore.parentElement.style.background = 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)';
+            }
+            
+            resultLevel.textContent = level;
+            
+            // Mettre en surbrillance la cellule correspondante
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('highlight');
+            });
+            
+            const targetCell = document.querySelector(`.cell[data-prob="${prob}"][data-impact="${impact}"]`);
+            if (targetCell) {
+                targetCell.classList.add('highlight');
+            }
+        }
+        
+        probSlider.addEventListener('input', updateCalculator);
+        impactSlider.addEventListener('input', updateCalculator);
+        
+        // Tooltip pour les cellules
+        const tooltip = document.getElementById('tooltip');
+        const cells = document.querySelectorAll('.cell');
+        
+        cells.forEach(cell => {
+            cell.addEventListener('mouseenter', (e) => {
+                const prob = cell.dataset.prob;
+                const impact = cell.dataset.impact;
+                const score = prob * impact;
+                
+                const probLabels = ['', 'Rare', 'Peu probable', 'Possible', 'Probable', 'Presque certain'];
+                const impactLabels = ['', 'Insignifiant', 'Mineur', 'Modéré', 'Majeur', 'Sévère'];
+                
+                tooltip.innerHTML = `
+                    <strong>Score de risque: ${score}</strong><br>
+                    Probabilité: ${probLabels[prob]} (${prob})<br>
+                    Impact: ${impactLabels[impact]} (${impact})
+                `;
+                
+                tooltip.style.left = e.pageX + 10 + 'px';
+                tooltip.style.top = e.pageY - 50 + 'px';
+                tooltip.classList.add('show');
+            });
+            
+            cell.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+            
+            cell.addEventListener('click', () => {
+                const prob = parseInt(cell.dataset.prob);
+                const impact = parseInt(cell.dataset.impact);
+                probSlider.value = prob;
+                impactSlider.value = impact;
+                updateCalculator();
+            });
+        });
+        
+        // Initialisation
+        updateCalculator();
+    </script>
+</body>
+</html>
